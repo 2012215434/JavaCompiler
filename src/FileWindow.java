@@ -16,6 +16,15 @@ import javax.swing.JPanel;
 import javax.swing.JTextArea;
 import javax.swing.JTextField;
 
+import org.fife.ui.autocomplete.AutoCompletion;
+import org.fife.ui.autocomplete.BasicCompletion;
+import org.fife.ui.autocomplete.CompletionProvider;
+import org.fife.ui.autocomplete.DefaultCompletionProvider;
+import org.fife.ui.autocomplete.ShorthandCompletion;
+import org.fife.ui.rsyntaxtextarea.RSyntaxTextArea;
+import org.fife.ui.rsyntaxtextarea.SyntaxConstants;
+import org.fife.ui.rtextarea.RTextScrollPane;
+
 @SuppressWarnings("serial")
 public class FileWindow extends JFrame implements ActionListener, Runnable {
 
@@ -27,7 +36,7 @@ public class FileWindow extends JFrame implements ActionListener, Runnable {
 	JButton button_input_text, button_compiler_text, button_compiler, button_run_prom, button_see_doswin;
 
 	JPanel p = new JPanel();
-	JTextArea input_text = new JTextArea();// program input area
+	RSyntaxTextArea input_text = new RSyntaxTextArea();// program input area
 	JTextArea compiler_text = new JTextArea();// compiler error display area
 	JTextArea dos_out_text = new JTextArea();// running result of the program
 
@@ -46,10 +55,18 @@ public class FileWindow extends JFrame implements ActionListener, Runnable {
 		button_run_prom = new JButton("runnig program");
 
 		p.setLayout(mycard);
-		p.add("input", input_text);
+		input_text.setSyntaxEditingStyle(SyntaxConstants.SYNTAX_STYLE_JAVA);
+		input_text.setCodeFoldingEnabled(true);
+		RTextScrollPane sp = new RTextScrollPane(input_text);
+
+		p.add("input", sp);
 		p.add("compiler", compiler_text);
 		p.add("dos", dos_out_text);
 		add(p, "Center");
+
+		CompletionProvider provider = createCompletionProvider();
+		AutoCompletion ac = new AutoCompletion(provider);
+		ac.install(input_text);
 
 		compiler_text.setBackground(Color.pink);
 		dos_out_text.setBackground(Color.cyan);
@@ -76,6 +93,42 @@ public class FileWindow extends JFrame implements ActionListener, Runnable {
 		button_see_doswin.addActionListener(this);
 
 	}
+	
+	private CompletionProvider createCompletionProvider() {
+
+	      // A DefaultCompletionProvider is the simplest concrete implementation
+	      // of CompletionProvider. This provider has no understanding of
+	      // language semantics. It simply checks the text entered up to the
+	      // caret position for a match against known completions. This is all
+	      // that is needed in the majority of cases.
+	      DefaultCompletionProvider provider = new DefaultCompletionProvider();
+
+	      // Add completions for all Java keywords. A BasicCompletion is just
+	      // a straightforward word completion.
+	      provider.addCompletion(new BasicCompletion(provider, "abstract"));
+	      provider.addCompletion(new BasicCompletion(provider, "assert"));
+	      provider.addCompletion(new BasicCompletion(provider, "break"));
+	      provider.addCompletion(new BasicCompletion(provider, "case"));
+	      // ... etc ...
+	      provider.addCompletion(new BasicCompletion(provider, "transient"));
+	      provider.addCompletion(new BasicCompletion(provider, "try"));
+	      provider.addCompletion(new BasicCompletion(provider, "void"));
+	      provider.addCompletion(new BasicCompletion(provider, "volatile"));
+	      provider.addCompletion(new BasicCompletion(provider, "while"));
+
+	      // Add a couple of "shorthand" completions. These completions don't
+	      // require the input text to be the same thing as the replacement text.
+	      provider.addCompletion(new ShorthandCompletion(provider, "sysout",
+	            "System.out.println(", "System.out.println("));
+	      provider.addCompletion(new ShorthandCompletion(provider, "syso",
+		            "System.out.println(", "System.out.println("));
+	      provider.addCompletion(new ShorthandCompletion(provider, "syserr",
+	            "System.err.println(", "System.err.println("));
+	      
+
+	      return provider;
+
+	   }
 
 	@Override
 	public void run() {
